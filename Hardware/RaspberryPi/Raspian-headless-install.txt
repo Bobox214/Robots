@@ -1,0 +1,17 @@
+- Download Raspian lite
+- Etcher to SD
+- Add an empty ssh file in the boot partition
+- add a wpa_supplicant.conf in the boot partition :
+country=fr
+update_config=1
+ctrl_interface=/var/run/wpa_supplicant
+network={
+ scan_ssid=1
+ ssid="MaBoxInternet"
+ psk="ClefSecurite"
+}
+- Boot
+- ssh pi@raspberrypi
+- password is raspberry
+
+
