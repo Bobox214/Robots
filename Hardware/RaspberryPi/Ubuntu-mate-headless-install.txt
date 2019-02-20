@@ -1,0 +1,4 @@
+# Ubuntu mate does not support 3B+ and 3A+ at this time
+# Incorrect boot loader.
+# Instructions that worked to convert ubuntu-mate-16.04.2-desktop-armhf-raspberry-pi to 3B+ 3A+
+https://ubuntu-mate.community/t/adapting-official-ubuntu-mate-16-04-2-lts-image-to-run-on-raspberry-pi-3-model-b-3b/17853?u=norbert_x

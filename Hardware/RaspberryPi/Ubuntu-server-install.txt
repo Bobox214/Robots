@@ -1,0 +1,23 @@
+# First installation
+- Download image
+    from http://cdimage.ubuntu.com/releases/
+    ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz
+- Burn image using 'etcher'
+- Connect USB to TTL
+- sudo screen /dev/ttyUSB0 115200
+- boot 3A+ with burned SD
+- You must see boot on screen.
+    Wait until login
+    ubuntu/ubuntu
+
+# Update Wifi connection, using netplan (18.04)
+# Example with cat /usr/share/doc/netplan.io/examples/wireless.yaml
+- edit /etc/netplan/xxx
+- move 'ethernets' to wifis, update to a wifi like entry with access-points and gateway4
+- sudo netplan apply
+
+# visible as 'ubuntu' on box
+# ssh is activated by default
+ssh ubuntu@ubuntu
+    
+

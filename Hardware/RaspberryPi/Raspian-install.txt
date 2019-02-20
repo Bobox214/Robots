@@ -1,3 +1,6 @@
+#
+# Headless SD
+#
 - Download Raspian lite
 - Etcher to SD
 - Add an empty ssh file in the boot partition
@@ -13,5 +16,16 @@ network={
 - Boot
 - ssh pi@raspberrypi
 - password is raspberry
+
+#
+# Use UART to login
+#
+- Connect USB to TTL : X X Black White Green
+- add at the end of Boot:config.txt
+dtoverlay=pi3-disable-bt
+enable_uart=1
+- Launch screen ( Ctrl-a k , to quit)
+sudo screen /dev/ttyUSB0 115200
+- Boot and type enter to login
 
 
