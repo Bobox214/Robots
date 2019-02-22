@@ -3,12 +3,17 @@
     from http://cdimage.ubuntu.com/releases/
     ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz
 - Burn image using 'etcher'
-- Connect USB to TTL
+# With USB to TTL
+- Connect USB to TTL : - - Black White Green
 - sudo screen /dev/ttyUSB0 115200
 - boot 3A+ with burned SD
 - You must see boot on screen.
     Wait until login
     ubuntu/ubuntu
+# Without USB to TTL
+- Wait long enough so boot complete ~ 5min
+- Remove SD and connect SD to the PC
+- Change /etc/netplan/50.cloud-init.yaml as under
 
 # Update Wifi connection, using netplan (18.04)
 # Example with cat /usr/share/doc/netplan.io/examples/wireless.yaml
@@ -20,4 +25,5 @@
 # ssh is activated by default
 ssh ubuntu@ubuntu
     
-
+# ROS installation specificities
+curl -sL "http://ha.pool.sks-keyservers.net/pks/lookup?op=get&search=0x421C365BD9FF1F717815A3895523BAEEB01FA116" | sudo apt-key ad
