@@ -27,3 +27,37 @@ ssh ubuntu@ubuntu
     
 # ROS installation specificities
 curl -sL "http://ha.pool.sks-keyservers.net/pks/lookup?op=get&search=0x421C365BD9FF1F717815A3895523BAEEB01FA116" | sudo apt-key ad
+
+# Camera and Pi camera tools
+# The camera is directly connected to the gpu.
+# Useful links :
+#  https://raspberrypi.stackexchange.com/questions/37359/how-to-use-raspistill-on-ubuntu
+#  https://picamera.readthedocs.io/en/release-1.13/index.html
+- edit /boot/firmware/config.txt and add
+start_x=1
+gpu_mem=128
+- install raspi-config
+wget https://archive.raspberrypi.org/debian/pool/main/r/raspi-config/raspi-config_20180406+1_all.deb -P /tmp
+apt-get install libnewt0.52 whiptail parted triggerhappy lua5.1 alsa-utils -y
+apt-get install -fy
+dpkg -i /tmp/raspi-config_20180406+1_all.deb
+- install userland. Raspi camera drivers
+sudo apt install cmake
+git clone https://github.com/raspberrypi/userland.git
+cd userland
+./buildme
+touch ~/.bash_aliases
+echo -e 'PATH=$PATH:/opt/vc/bin\nexport PATH' >> ~/.bash_aliases
+echo -e 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/vc/lib\nexport LD_LIBRARY_PATH' >> ~/.bash_aliases
+source ~/.bashrc
+ldconfig
+- give rights to camera
+sudo sh -c 'echo "SUBSYSTEM==\"vchiq\",GROUP=\"video\",MODE=\"0660\"" > /etc/udev/rules.d/10-vchiq-permissions.rules'
+sudo usermod -a -G video $(whoami)
+reboot
+- test with raspistill
+raspistill -o cam.jpg
+- install python picamera using pip
+  Follow instruction in picamera read the docs.
+sudo apt install python3-pip
+
