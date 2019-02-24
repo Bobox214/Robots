@@ -61,3 +61,8 @@ raspistill -o cam.jpg
   Follow instruction in picamera read the docs.
 sudo apt install python3-pip
 
+
+# Camera 2
+sudo add-apt-repository ppa:ubuntu-raspi2/ppa
+sudo apt-get update
+sudo apt install libraspberrypi0 
