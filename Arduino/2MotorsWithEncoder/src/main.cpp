@@ -58,7 +58,7 @@ void setup() {
     while (!Serial) {}
     digitalWrite(LED_BUILTIN,0);
     Serial.println("Serial Start");
-    //attachInterrupt(digitalPinToInterrupt(ENCODER1A),encoderCountA,RISING);
+    attachInterrupt(digitalPinToInterrupt(ENCODER1A),encoderCountA,RISING);
     attachInterrupt(digitalPinToInterrupt(ENCODER1B),encoderCountB,RISING);
 }
 
