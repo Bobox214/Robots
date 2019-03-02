@@ -7,7 +7,7 @@
 
 #define TICKS_PER_ROTATION 610
 
-ros::NodeHandle nh;
+ros::NodeHandle_<ArduinoHardware, 1, 1, 128, 128> nh;
 
 //std_msgs::Int32 msgEncoder1;
 //ros::Publisher pubEncoder1("Encoder1",&msgEncoder1);
@@ -15,8 +15,6 @@ Base  base;
 
 uint32_t  motors_timer;    // Handles stopping motors after certain time without message
 int     motors_timeout;
-
-char msg[128];
 
 void cmdVelCb( const geometry_msgs::Twist& cmd_vel_msg){
     motors_timer = millis() + motors_timeout;
@@ -50,12 +48,15 @@ void waitRosConnection() {
     }
 
     if (!nh.getParam("~baseWidth", &baseWidth)) { 
+       nh.loginfo("Using default values for baseWidth");
        baseWidth = 0.17;
     }
     if (!nh.getParam("~wheelRadius", &wheelRadius)) { 
+       nh.loginfo("Using default values for wheelRadius");
        wheelRadius = 0.032;
     }
     if (!nh.getParam("~ticksPerRotation", &ticksPerRotation)) { 
+       nh.loginfo("Using default values for ticksPerRotation");
        ticksPerRotation = 610;
     }
 
@@ -67,38 +68,17 @@ void waitRosConnection() {
 
 const int BTN   = 19;
 
-bool pressed = 0;
 // 610 par tour
 
-void reset() {
-  digitalWrite(LED_BUILTIN,0);
-  base.stop();
-}
-
 void setup() {
-    pinMode(BTN  , INPUT );
-
     nh.initNode();
     nh.subscribe(cmdVelSub);
     digitalWrite(LED_BUILTIN,0);
     waitRosConnection();
     digitalWrite(LED_BUILTIN,1);
-    pressed = 1;
 }
 
 void loop() {
-    if (!nh.connected())
-
-    if (digitalRead(BTN)) {
-        pressed = !pressed;
-        if (!pressed) {
-          reset();
-        }
-        if (pressed) {
-            digitalWrite(LED_BUILTIN,1);
-        }
-        delay(200);
-    }
 
     if (motors_timer!=0 && millis()>motors_timer) {
         base.stop();
