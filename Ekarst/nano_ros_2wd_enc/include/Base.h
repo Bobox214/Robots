@@ -1,4 +1,4 @@
-#define PI 3.141592
+#include <PID.h>
 
 const int PWML  = 5;
 const int DIR1L = 6;
@@ -31,13 +31,6 @@ void encoderCountR() {
 class Base {
 	public:
 		Base()
-			:	debug(false)
-			,	_x(0)
-			,	_y(0)
-			,	_yaw(0)
-			,	kP(100)
-			,	kI(1000)
-			,	kD(0)
 		{	
             pinMode(PWML , OUTPUT);
             pinMode(DIR1L, OUTPUT);
@@ -48,19 +41,22 @@ class Base {
             attachInterrupt(digitalPinToInterrupt(ENCODER1L),encoderCountL,RISING);
             attachInterrupt(digitalPinToInterrupt(ENCODER1R),encoderCountR,RISING);
 
-			pidL.setCoefficients(kP,kI,kD);
-			pidL.setOutputRange(-255,255,20);
-			pidL.setDebug(false);
-			pidR.setCoefficients(kP,kI,kD);
-			pidR.setOutputRange(-255,255,20);
-			pidR.setDebug(false);
-
             setMotorPwm(0,0);
+            setPosition(0,0,0);
 		}
 		void setParameters(double baseWidth, double wheelRadius, int ticksPerRotation) {
 			this->baseWidth        = baseWidth;
 			this->wheelRadius      = wheelRadius;
 			this->ticksPerRotation = ticksPerRotation;
+		}
+		void setPIDs(double Kp,double Ki, double Kd) {
+			this->baseWidth        = baseWidth;
+			this->wheelRadius      = wheelRadius;
+			this->ticksPerRotation = ticksPerRotation;
+			pidL.setCoefficients(kP,kI,kD);
+			pidL.setOutputRange(-255,255,20);
+			pidR.setCoefficients(kP,kI,kD);
+			pidR.setOutputRange(-255,255,20);
 		}
 		void setPosition(double x, double y, double yaw) {
 			this->_x   = x;
@@ -70,22 +66,22 @@ class Base {
 		void setDebug(bool debug) {
 			this->debug = debug;
 		}
-		void loop(double yaw) {
+		void loop() {
 			double dt = (millis()-loopTime)/1000.0;
 			long newTicksL = countL;
 			long newTicksR = countR;
 			double dl = (2*PI*wheelRadius*(newTicksL-ticksL))/ticksPerRotation;
 			double dr = (2*PI*wheelRadius*(newTicksR-ticksR))/ticksPerRotation;
 			double df = (dr+dl)/2;
-			double dx = df*cos(yaw);
-			double dy = df*sin(yaw);
-			double dyaw = atan2(sin(yaw-_yaw),cos(yaw-_yaw));
+			double dx = df*cos(_yaw);
+			double dy = df*sin(_yaw);
+			double dyaw = atan2(dr-dl,baseWidth);
 			curVR = dr/dt;
 			curVL = dl/dt;
 			curW  = dyaw/dt;
-			_x += dx;
-			_y += dy;
-			_yaw = yaw;
+			_x   += dx;
+			_y   += dy;
+			_yaw += dyaw;
 			if (speedMode) {
 				pwmL = pidL.update(curVL-goalVL,dt);
 				pwmR = pidR.update(curVR-goalVR,dt);
@@ -131,7 +127,7 @@ class Base {
 			goalVL = v+w*baseWidth/2;
 		}
 		void stop() {
-            setMotorPwm(0,0)
+            setMotorPwm(0,0);
 			pidL.reset();
 			pidR.reset();
 			speedMode = false;
@@ -143,8 +139,8 @@ class Base {
 	private:
 		double baseWidth,wheelRadius;
 		int    ticksPerRotation;
-		double _x,_y,_yaw;
 		bool   debug;
+		double _x,_y,_yaw;
 		PID    pidL,pidR;
 		bool   speedMode;
 		double kP,kI,kD;

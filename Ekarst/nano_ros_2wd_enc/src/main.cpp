@@ -3,11 +3,18 @@
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
 
+#include <Base.h>
+
+#define TICKS_PER_ROTATION 610
+
 ros::NodeHandle nh;
 
-std_msgs::Int32 msgEncoder1;
-ros::Publisher pubEncoder1("Encoder1",&msgEncoder1);
-base* Base;
+//std_msgs::Int32 msgEncoder1;
+//ros::Publisher pubEncoder1("Encoder1",&msgEncoder1);
+Base  base;
+
+uint32_t  motors_timer;    // Handles stopping motors after certain time without message
+int     motors_timeout;
 
 char msg[128];
 
@@ -16,22 +23,7 @@ void cmdVelCb( const geometry_msgs::Twist& cmd_vel_msg){
     nh.loginfo("Motor cmd_vel received");
     float v = cmd_vel_msg.linear.x;
     float w = cmd_vel_msg.angular.z;
-    float vL = v+(w*baseWidth)/2;
-    float vR = v-(w*baseWidth)/2;
-    float vLrpm = vL*30/(PI*wheelRadius);
-    float vRrpm = vR*30/(PI*wheelRadius);
-    sprintf(msg,"Current speed 1: %d vs %d 2: %d vs %d ; v:%d w:%d",
-        int(1000*Encoder1.getCurrentSpeed())
-    ,   int(1000*-vRrpm)
-    ,   int(1000*Encoder2.getCurrentSpeed())
-    ,   int(1000*vLrpm)
-    ,   int(1000*v)
-    ,   int(1000*w)
-    );
-    nh.loginfo(msg);
-    Encoder1.runSpeed(-vRrpm);
-    Encoder2.runSpeed(vLrpm);
-    motors_timer = millis()+motors_timeout;
+    base.setSpeed(v,w);
 }
 
 ros::Subscriber<geometry_msgs::Twist> cmdVelSub("cmd_vel", &cmdVelCb);
@@ -39,6 +31,9 @@ ros::Subscriber<geometry_msgs::Twist> cmdVelSub("cmd_vel", &cmdVelCb);
 void waitRosConnection() {
 
     float pidConstants[3];
+    float baseWidth;
+    float wheelRadius;
+    int   ticksPerRotation;
 
     // Get Node parameters
     while (!nh.connected()) { nh.spinOnce(); };
@@ -60,41 +55,57 @@ void waitRosConnection() {
     if (!nh.getParam("~wheelRadius", &wheelRadius)) { 
        wheelRadius = 0.032;
     }
+    if (!nh.getParam("~ticksPerRotation", &ticksPerRotation)) { 
+       ticksPerRotation = 610;
+    }
 
-    Encoder1.setSpeedPid(pidConstants[0],pidConstants[1],pidConstants[2]);
-    Encoder2.setSpeedPid(pidConstants[0],pidConstants[1],pidConstants[2]);
-
-    Encoder1.setPulsePos(0);
-    Encoder2.setPulsePos(0);
-
+    base.setParameters(baseWidth,wheelRadius,ticksPerRotation);
+    base.setPIDs(pidConstants[0],pidConstants[1],pidConstants[2]);
+    base.stop();
     motors_timer = 0;
 }
 
 const int BTN   = 19;
 
 bool pressed = 0;
-int8_t incr = 1;
 // 610 par tour
+
 void reset() {
-    digitalWrite(LED_BUILTIN,0);
+  digitalWrite(LED_BUILTIN,0);
+  base.stop();
 }
+
 void setup() {
-    Serial.begin(9600);
     pinMode(BTN  , INPUT );
-    reset();
-    digitalWrite(LED_BUILTIN,1);
-    while (!Serial) {}
+
+    nh.initNode();
+    nh.subscribe(cmdVelSub);
     digitalWrite(LED_BUILTIN,0);
+    waitRosConnection();
+    digitalWrite(LED_BUILTIN,1);
+    pressed = 1;
 }
 
 void loop() {
+    if (!nh.connected())
+
     if (digitalRead(BTN)) {
         pressed = !pressed;
-        if (!pressed)
-            reset();
+        if (!pressed) {
+          reset();
+        }
         if (pressed) {
             digitalWrite(LED_BUILTIN,1);
         }
         delay(200);
     }
+
+    if (motors_timer!=0 && millis()>motors_timer) {
+        base.stop();
+        motors_timer = 0;
+        nh.loginfo("Motors have been stopped after timeout");
+    }
+
+    base.loop();
+    nh.spinOnce();
 }
