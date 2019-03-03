@@ -9,8 +9,6 @@
 
 ros::NodeHandle_<ArduinoHardware, 1, 1, 128, 128> nh;
 
-//std_msgs::Int32 msgEncoder1;
-//ros::Publisher pubEncoder1("Encoder1",&msgEncoder1);
 Base  base;
 
 uint32_t  motors_timer;    // Handles stopping motors after certain time without message
@@ -18,7 +16,6 @@ int     motors_timeout;
 
 void cmdVelCb( const geometry_msgs::Twist& cmd_vel_msg){
     motors_timer = millis() + motors_timeout;
-    nh.loginfo("Motor cmd_vel received");
     float v = cmd_vel_msg.linear.x;
     float w = cmd_vel_msg.angular.z;
     base.setSpeed(v,w);
@@ -36,32 +33,18 @@ void waitRosConnection() {
     // Get Node parameters
     while (!nh.connected()) { nh.spinOnce(); };
 
-    if (!nh.getParam("~motors_timeout", &motors_timeout)) { 
-       nh.loginfo("Using default values for motors_timeout");
-       motors_timeout = 1000;
-    }
-    if (!nh.getParam("~pid", pidConstants, 3)) { 
-       nh.loginfo("Using default values for pid");
-       pidConstants[0] = 0.18;
-       pidConstants[1] = 0;
-       pidConstants[2] = 0;
-    }
-
-    if (!nh.getParam("~baseWidth", &baseWidth)) { 
-       nh.loginfo("Using default values for baseWidth");
-       baseWidth = 0.17;
-    }
-    if (!nh.getParam("~wheelRadius", &wheelRadius)) { 
-       nh.loginfo("Using default values for wheelRadius");
-       wheelRadius = 0.032;
-    }
-    if (!nh.getParam("~ticksPerRotation", &ticksPerRotation)) { 
-       nh.loginfo("Using default values for ticksPerRotation");
-       ticksPerRotation = 610;
-    }
+    motors_timeout   = 2000;
+    pidConstants[0]  = 20;
+    pidConstants[1]  = 50;
+    pidConstants[2]  = 5;
+    baseWidth        = 0.34;
+    wheelRadius      = 0.075;
+    ticksPerRotation = 610;
 
     base.setParameters(baseWidth,wheelRadius,ticksPerRotation);
     base.setPIDs(pidConstants[0],pidConstants[1],pidConstants[2]);
+    base.setNodeHandler(&nh);
+    base.setDebug(true);
     base.stop();
     motors_timer = 0;
 }
@@ -88,4 +71,5 @@ void loop() {
 
     base.loop();
     nh.spinOnce();
+    delay(100);
 }

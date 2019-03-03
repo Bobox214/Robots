@@ -1,26 +1,29 @@
+#include <ros.h>
 
 class PID {
 	public:
+        
 		PID() {
 			reset();
 		}
-		void setCoefficients(double kP, double kI, double kD) {
+		void setCoefficients(float kP, float kI, float kD) {
 			this->kP = kP;
 			this->kI = kI;
 			this->kD = kD;
 		}
-		void setOutputRange(double minOutput,double maxOutput,double neutralZone) {
+		void setOutputRange(float minOutput,float maxOutput,float neutralZone) {
 			this->minOutput   = minOutput;
 			this->maxOutput   = maxOutput;
 			this->neutralZone = neutralZone;
 		}
-		double update(double error) {
+		float update(float error) {
 			return update(error,error-lastError,1);
 		}
-		double update(double error,double dt) {
+		float update(float error,float dt) {
 			return update(error,(error-lastError)/dt,dt);
 		}
-		double update(double error,double diffError,double dt) {
+		float update(float error,float diffError,float dt) {
+
 			output = kP*error+kI*cumError+kD*diffError;
 			if (output<0)
 				output -= neutralZone;
@@ -39,11 +42,15 @@ class PID {
 			cumError  = 0;
 			diffError = 0;
 		}
+        void setNodeHandler(ros::NodeHandle_<ArduinoHardware, 1, 1, 128, 128> *nodeHandler) {
+            nh = nodeHandler;
+        }
 	private:
-		double neutralZone;
-		double minOutput;
-		double maxOutput;
-		double kI, kP, kD;
-		double error, lastError, diffError, cumError;
-		double output;
+        ros::NodeHandle_<ArduinoHardware, 1, 1, 128, 128> *nh; 
+		float neutralZone;
+		float minOutput;
+		float maxOutput;
+		float kI, kP, kD;
+		float error, lastError, diffError, cumError;
+		float output;
 };
