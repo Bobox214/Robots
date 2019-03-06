@@ -7,3 +7,6 @@ export ROS_MASTER_URI=http://$PI:11311
 export ROS_IP=$PI
 export ROS_HOSTNAME=$PI
 
+# Watch for incoming bluetooth SerialPort connections
+sudo rfcomm watch hci1 &
+

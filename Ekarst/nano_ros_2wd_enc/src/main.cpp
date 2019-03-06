@@ -33,7 +33,7 @@ void waitRosConnection() {
     // Get Node parameters
     while (!nh.connected()) { nh.spinOnce(); };
 
-    motors_timeout   = 2000;
+    motors_timeout   = 1000;
     pidConstants[0]  = 20;
     pidConstants[1]  = 50;
     pidConstants[2]  = 5;
