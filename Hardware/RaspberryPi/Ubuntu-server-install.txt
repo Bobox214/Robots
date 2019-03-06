@@ -1,7 +1,8 @@
 # First installation
+# Compulsory site : https://wiki.ubuntu.com/ARM/RaspberryPi
 - Download image
     from http://cdimage.ubuntu.com/releases/
-    ubuntu-18.04.2-preinstalled-server-arm64+raspi3.img.xz
+    ubuntu-18.04.2-preinstalled-server-armhf+raspi3.img.xz
 - Burn image using 'etcher'
 # With USB to TTL
 - Connect USB to TTL : - - Black White Green
@@ -25,6 +26,14 @@
 # ssh is activated by default
 ssh ubuntu@ubuntu
     
+# Add additional repositories
+# For raspi-config, raspistill and tool for camera
+sudo add-apt-repository ppa:ubuntu-raspi2/ppa
+sudo apt update
+sudo apt insall raspi-config raspistill
+# For bluetooth
+sudo add-apt-repository ppa:ubuntu-pi-flavour-makers/ppa
+
 # ROS installation specificities
 curl -sL "http://ha.pool.sks-keyservers.net/pks/lookup?op=get&search=0x421C365BD9FF1F717815A3895523BAEEB01FA116" | sudo apt-key ad
 
@@ -36,25 +45,6 @@ curl -sL "http://ha.pool.sks-keyservers.net/pks/lookup?op=get&search=0x421C365BD
 - edit /boot/firmware/config.txt and add
 start_x=1
 gpu_mem=128
-- install raspi-config
-wget https://archive.raspberrypi.org/debian/pool/main/r/raspi-config/raspi-config_20180406+1_all.deb -P /tmp
-apt-get install libnewt0.52 whiptail parted triggerhappy lua5.1 alsa-utils -y
-apt-get install -fy
-dpkg -i /tmp/raspi-config_20180406+1_all.deb
-- install userland. Raspi camera drivers
-sudo apt install cmake
-git clone https://github.com/raspberrypi/userland.git
-cd userland
-./buildme
-touch ~/.bash_aliases
-echo -e 'PATH=$PATH:/opt/vc/bin\nexport PATH' >> ~/.bash_aliases
-echo -e 'LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/vc/lib\nexport LD_LIBRARY_PATH' >> ~/.bash_aliases
-source ~/.bashrc
-ldconfig
-- give rights to camera
-sudo sh -c 'echo "SUBSYSTEM==\"vchiq\",GROUP=\"video\",MODE=\"0660\"" > /etc/udev/rules.d/10-vchiq-permissions.rules'
-sudo usermod -a -G video $(whoami)
-reboot
 - test with raspistill
 raspistill -o cam.jpg
 - install python picamera using pip
@@ -63,6 +53,16 @@ sudo apt install python3-pip
 
 
 # Camera 2
-sudo add-apt-repository ppa:ubuntu-raspi2/ppa
 sudo apt-get update
 sudo apt install libraspberrypi0 
+
+
+# BLuetooth
+sudo app install pi-bluetooth python-bluez
+- edit /etc/systemd/system/dbus-org.bluez.service
+ExecStart=/usr/lib/bluetooth/bluetoothd -C
+ExecStartPost=/usr/bin/sdptool add SP
+- Save the file and reboot. Pair and trust your Pi and phone with bluetoothctl.
+sudo rfcomm watch hci1 &
+- You can now connect to the device
+sudo screen /dev/rfcomm0 115200
