@@ -1,9 +1,17 @@
 #!/usr/bin/env python
 import roslib; roslib.load_manifest('bluetooth_controller')
 import rospy
-import time,serial
+import sys,time,signal,serial
+import sys
 
 from geometry_msgs.msg import Twist
+
+def sigHandler(_signo, _stack_frame):
+    sys.exit(1)
+
+signal.signal(signal.SIGINT , sigHandler)
+signal.signal(signal.SIGTERM, sigHandler)
+
 
 btPort  = '/dev/rfcomm0'
 btBauds = 115200

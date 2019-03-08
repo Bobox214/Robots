@@ -16,7 +16,7 @@ const int ENCODER2L = 18;
 volatile int32_t countL = 0;
 volatile int32_t countR = 0;
 
-char msg[256];
+char msg[128];
 
 void encoderCountL() {
     if (digitalRead(ENCODER2L))
@@ -140,7 +140,7 @@ class Base {
 			speedMode = false;
 		}
 
-        void setNodeHandler(ros::NodeHandle_<ArduinoHardware, 1, 1, 128, 128> *nodeHandler) {
+        void setNodeHandler(NodeHandle_t *nodeHandler) {
             nh = nodeHandler;
             pidL.setNodeHandler(nodeHandler);
             pidR.setNodeHandler(nodeHandler);
@@ -150,7 +150,7 @@ class Base {
 		float y()   { return this->_y;   }
 		float yaw() { return this->_yaw; }
 	private:
-        ros::NodeHandle_<ArduinoHardware, 1, 1, 128, 128> *nh; 
+        NodeHandle_t *nh; 
 		float baseWidth,wheelRadius;
 		int    ticksPerRotation;
 		bool   debug;

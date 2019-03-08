@@ -1,0 +1,8 @@
+<launch>
+    <param name="direct" value="1" type="bool" />
+    <node pkg="rosserial_python" type="serial_node.py" name="nano_serial" output="screen">
+        <param name="direct_cmd" value="$(arg direct)"/>
+        <param name="motors_timeout" value="$(eval 400+600*arg('direct'))" type="int" />
+    </node>
+    <node pkg="bluetooth_controller" type="teleop_twist_bt.py" name="teleop_twist_bt" />
+</launch>

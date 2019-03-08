@@ -3,55 +3,65 @@
 #include <ros.h>
 #include <geometry_msgs/Twist.h>
 
+typedef ros::NodeHandle_<ArduinoHardware, 1, 1,128,128> NodeHandle_t;
+
 #include <Base.h>
 
 #define TICKS_PER_ROTATION 610
 
-ros::NodeHandle_<ArduinoHardware, 1, 1, 128, 128> nh;
+NodeHandle_t nh;
 
 Base  base;
 
-uint32_t  motors_timer;    // Handles stopping motors after certain time without message
-int     motors_timeout;
+const float pidKp            = 20.0;
+const float pidKi            = 50.0;
+const float pidKd            = 5.0;
+const float baseWidth        = 0.34;
+const float wheelRadius      = 0.075;
+const int   ticksPerRotation = 610;
 
+uint32_t  motors_timer;    // Handles stopping motors after certain time without message
+int       motors_timeout   = 1000;
+
+bool directCmd = false;  // When set to True, cmd_vel is directly converted to Motor PWM
+                         // When set to False, cmd_vel is converted to motor speed with a PID
 void cmdVelCb( const geometry_msgs::Twist& cmd_vel_msg){
     motors_timer = millis() + motors_timeout;
     float v = cmd_vel_msg.linear.x;
     float w = cmd_vel_msg.angular.z;
-    base.setSpeed(v,w);
+    if (directCmd) {
+       int pwmL = constrain(v*400-w*100,-255,255); 
+       int pwmR = constrain(v*400+w*100,-255,255); 
+       base.setMotorPwm(pwmL,pwmR);
+    } else {
+        base.setSpeed(v,w);
+    }
 }
 
 ros::Subscriber<geometry_msgs::Twist> cmdVelSub("cmd_vel", &cmdVelCb);
 
 void waitRosConnection() {
 
-    float pidConstants[3];
-    float baseWidth;
-    float wheelRadius;
-    int   ticksPerRotation;
-
-    // Get Node parameters
     while (!nh.connected()) { nh.spinOnce(); };
 
-    motors_timeout   = 1000;
-    pidConstants[0]  = 20;
-    pidConstants[1]  = 50;
-    pidConstants[2]  = 5;
-    baseWidth        = 0.34;
-    wheelRadius      = 0.075;
-    ticksPerRotation = 610;
+
+    if (!nh.getParam("~direct_cmd", &directCmd)) {
+        nh.loginfo("Using default value false for direct_cmd");
+    } else
+        nh.loginfo("Direct_cmd received");
+    if (!nh.getParam("~motors_timeout", &motors_timeout)) {
+        nh.loginfo("Using default value for motors_timeout");
+    } else
+        nh.loginfo("motors_timeout received");
+    //nh.getParam("~debug", &debug);
 
     base.setParameters(baseWidth,wheelRadius,ticksPerRotation);
-    base.setPIDs(pidConstants[0],pidConstants[1],pidConstants[2]);
+    base.setPIDs(pidKp,pidKi,pidKp);
     base.setNodeHandler(&nh);
     base.setDebug(true);
     base.stop();
     motors_timer = 0;
 }
-
-const int BTN   = 19;
-
-// 610 par tour
 
 void setup() {
     nh.initNode();
@@ -71,5 +81,5 @@ void loop() {
 
     base.loop();
     nh.spinOnce();
-    delay(100);
+    delay(50);
 }

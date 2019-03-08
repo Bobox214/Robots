@@ -42,11 +42,11 @@ class PID {
 			cumError  = 0;
 			diffError = 0;
 		}
-        void setNodeHandler(ros::NodeHandle_<ArduinoHardware, 1, 1, 128, 128> *nodeHandler) {
+        void setNodeHandler(NodeHandle_t *nodeHandler) {
             nh = nodeHandler;
         }
 	private:
-        ros::NodeHandle_<ArduinoHardware, 1, 1, 128, 128> *nh; 
+        NodeHandle_t *nh; 
 		float neutralZone;
 		float minOutput;
 		float maxOutput;
